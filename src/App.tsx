@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { decodeCsvBytes } from './lib/decode'
 import { judge } from './lib/judge'
 import { parseGradesCsv } from './lib/parseCsv'
+import { entryYearFromStudentId } from './lib/studentId'
 import type { JudgeResult } from './lib/types'
 import { CourseTable } from './components/CourseTable'
 import { FileDropZone } from './components/FileDropZone'
@@ -23,7 +24,7 @@ export default function App() {
     try {
       const text = decodeCsvBytes(await file.arrayBuffer())
       const parsed = parseGradesCsv(text)
-      const result = judge(parsed.courses)
+      const result = judge(parsed.courses, entryYearFromStudentId(parsed.studentId))
       setLoaded({
         fileName: file.name,
         studentId: parsed.studentId,
@@ -65,6 +66,8 @@ export default function App() {
             <span className="banner-meta">
               {loaded.fileName}
               {loaded.studentId && ` ・ 学籍番号 ${loaded.studentId}`}
+              {loaded.result.entryYear && ` ・ ${loaded.result.entryYear}年度入学`}
+              {` ・ ${loaded.result.ruleSetLabel}`}
             </span>
           </div>
 

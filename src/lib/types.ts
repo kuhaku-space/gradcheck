@@ -67,4 +67,8 @@ export interface JudgeResult {
   requirements: RequirementResult[]
   courses: JudgedCourse[]
   warnings: string[]
+  /** 学籍番号から推定した入学年度（推定不能なら null） */
+  entryYear: number | null
+  /** 適用したルールセットの表示ラベル */
+  ruleSetLabel: string
 }

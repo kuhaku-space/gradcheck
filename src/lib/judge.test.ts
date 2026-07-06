@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { sampleCsv } from './__fixtures__/sampleCsv'
 import { judge } from './judge'
 import { classifyCourse, parseGradesCsv } from './parseCsv'
+import { entryYearFromStudentId } from './studentId'
 import type { CourseRecord } from './types'
 
 /** テスト用の科目レコードを作る */
@@ -37,7 +38,8 @@ function req(result: ReturnType<typeof judge>, id: string) {
 }
 
 describe('judge (フィクスチャCSV: 架空の在学生)', () => {
-  const result = judge(parseGradesCsv(sampleCsv).courses)
+  const parsed = parseGradesCsv(sampleCsv)
+  const result = judge(parsed.courses, entryYearFromStudentId(parsed.studentId))
 
   it('総合判定は未充足', () => {
     expect(result.overall).toBe(false)
@@ -163,5 +165,15 @@ describe('judge (合成データ)', () => {
     const r = req(result, 'required')
     expect(r.satisfied).toBe(false)
     expect(r.detail).toContain('研究')
+  })
+
+  it('入学年度が不明な場合はルールセットの警告を結果に含める', () => {
+    const result = judge([kiso('選択A')], null)
+    expect(result.warnings.some((w) => w.includes('推定できなかった'))).toBe(true)
+  })
+
+  it('要件定義より前の入学年度では経過措置の警告を結果に含める', () => {
+    const result = judge([kiso('選択A')], 2020)
+    expect(result.warnings.some((w) => w.includes('経過措置'))).toBe(true)
   })
 })
