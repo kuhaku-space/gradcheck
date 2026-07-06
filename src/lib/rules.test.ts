@@ -28,7 +28,14 @@ describe('ruleSetForEntryYear', () => {
       earliest.fromEntryYear - 1,
     )
     expect(ruleSet).toBe(earliest)
-    expect(warning).toContain('経過措置')
+    expect(warning).toContain('要件定義がない')
+  })
+
+  it('年度の境界で正しいルールセットを選ぶ', () => {
+    expect(ruleSetForEntryYear(2017).ruleSet.fromEntryYear).toBe(2017)
+    expect(ruleSetForEntryYear(2018).ruleSet.fromEntryYear).toBe(2017)
+    expect(ruleSetForEntryYear(2019).ruleSet.fromEntryYear).toBe(2019)
+    expect(ruleSetForEntryYear(2024).ruleSet.fromEntryYear).toBe(2019)
   })
 
   it('ルールセットは入学年度の昇順に並んでいる', () => {

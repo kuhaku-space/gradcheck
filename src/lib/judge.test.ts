@@ -172,8 +172,52 @@ describe('judge (合成データ)', () => {
     expect(result.warnings.some((w) => w.includes('推定できなかった'))).toBe(true)
   })
 
-  it('要件定義より前の入学年度では経過措置の警告を結果に含める', () => {
-    const result = judge([kiso('選択A')], 2020)
-    expect(result.warnings.some((w) => w.includes('経過措置'))).toBe(true)
+  it('要件定義より前の入学年度では注意の警告を結果に含める', () => {
+    const result = judge([kiso('選択A')], 2016)
+    expect(result.warnings.some((w) => w.includes('要件定義がない'))).toBe(true)
+  })
+
+  it('2017〜2018年度入学には教養・涵養の区分要件が課されない', () => {
+    const result = judge([kiso('選択A')], 2018)
+    const ids = result.requirements.map((r) => r.id)
+    expect(ids).toContain('senko-kiso')
+    expect(ids).toContain('total')
+    expect(ids).not.toContain('senmon')
+    expect(ids).not.toContain('senmon-kokusai')
+    expect(ids).not.toContain('kokusai')
+    expect(ids).not.toContain('kodo-kyoyo')
+  })
+
+  it('高度教養を2単位超修得しても専門＋涵養28単位は必要', () => {
+    const kyoyo = (name: string) =>
+      course(
+        name,
+        '教養教育系科目（高度教養教育科目）',
+        '高度教養教育科目（他学部・他研究科等）',
+      )
+    const courses: CourseRecord[] = [
+      // 専攻基礎 22 + 境界 2 + 涵養 2 = 専門・涵養 26 < 28
+      course('コンピュータサイエンス研究Ⅰa', senmon, '専攻基礎科目（必修）'),
+      course('コンピュータサイエンス研究Ⅰb', senmon, '専攻基礎科目（必修）'),
+      course('コンピュータサイエンス演習Ⅰ', senmon, '専攻基礎科目（選択必修1）'),
+      course('コンピュータサイエンス演習Ⅱ', senmon, '専攻基礎科目（選択必修1）'),
+      ...['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((s) => kiso(`選択${s}`)),
+      course('境界A', senmon, '専攻境界科目'),
+      course(
+        '英語プレゼンテーション',
+        '国際性涵養教育系科目（高度国際性涵養教育科目・専門教育科目）',
+        '専攻境界科目',
+      ),
+      // 教養を4単位取って総計30に届かせても専門＋涵養が不足
+      kyoyo('教養A'),
+      kyoyo('教養B'),
+    ]
+    const result = judge(courses, 2024)
+    expect(req(result, 'total').current).toBe(30)
+    expect(req(result, 'total').satisfied).toBe(true)
+    const sk = req(result, 'senmon-kokusai')
+    expect(sk.current).toBe(26)
+    expect(sk.satisfied).toBe(false)
+    expect(result.overall).toBe(false)
   })
 })

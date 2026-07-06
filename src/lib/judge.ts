@@ -145,6 +145,15 @@ export function judge(
     },
     creditRequirement('senko-kiso', '専攻基礎科目', senkoKiso, rules.senkoKisoMin),
     creditRequirement('senmon', '専門教育科目', senmon, rules.senmonMin),
+    // 修了要件表の積算ツリー「合計30 = 高度教養(2) + 専門・涵養(28)」より。
+    // 高度教養教育科目を2単位超修得しても総計30単位の残り28単位は
+    // 専門教育科目・高度国際性涵養教育科目で満たす必要がある
+    creditRequirement(
+      'senmon-kokusai',
+      '専門教育科目＋高度国際性涵養教育科目',
+      senmon + kokusai,
+      rules.senmonKokusaiMin,
+    ),
     creditRequirement(
       'kokusai',
       '高度国際性涵養教育科目',
@@ -159,7 +168,8 @@ export function judge(
       satisfied: null,
       detail: '成績 CSV からは判定できません。指導教員・教務係に確認してください。',
     },
-  ]
+    // 必要単位数 0 の区分はその年度の要件に存在しない（2017〜2018年度入学など）
+  ].filter((r) => r.required === undefined || r.required > 0)
 
   const overall = requirements
     .filter((r) => r.satisfied !== null)
