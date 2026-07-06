@@ -77,10 +77,9 @@ describe('judge (フィクスチャCSV: 架空の在学生)', () => {
     expect(total.satisfied).toBe(false)
   })
 
-  it('不合格科目は単位に算入せず警告を出す', () => {
+  it('不合格科目は単位に算入しない（充当先なし）', () => {
     const failed = result.courses.find((c) => c.name === '画像認識')
     expect(failed?.bucket).toBeNull()
-    expect(result.warnings.some((w) => w.includes('不合格'))).toBe(true)
   })
 
   it('研究指導は判定不能（null）', () => {

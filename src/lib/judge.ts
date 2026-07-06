@@ -106,14 +106,6 @@ export function judge(courses: CourseRecord[]): JudgeResult {
         '「本専攻が指定する科目」に該当するかは教務係に確認してください。',
     )
   }
-  const failed = judged.filter((c) => !c.passed)
-  if (failed.length > 0) {
-    warnings.push(
-      `不合格の科目が ${failed.length} 件あります（単位数に算入していません）: ` +
-        failed.map((c) => c.name).join('、'),
-    )
-  }
-
   const requirements: RequirementResult[] = [
     {
       id: 'required',
