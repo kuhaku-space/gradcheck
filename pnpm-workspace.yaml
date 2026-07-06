@@ -1,0 +1,3 @@
+# esbuild はネイティブバイナリを配置する postinstall を持つためビルドを許可する
+allowBuilds:
+  esbuild: true
