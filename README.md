@@ -63,6 +63,11 @@ git push dokku main
 
 サーバ側の初回セットアップや HTTPS 化は [docs/deployment.md](docs/deployment.md) を参照。
 
+GitHub Pages でも配信できる。`.github/workflows/deploy-pages.yml` が
+`main` への push を契機にビルド・公開する（初回のみ Settings → Pages で
+Source を `GitHub Actions` に設定する）。詳細は
+[docs/deployment.md](docs/deployment.md#デプロイgithub-pages) を参照。
+
 ## ドキュメント
 
 | ドキュメント | 内容 |

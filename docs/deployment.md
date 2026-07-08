@@ -65,3 +65,17 @@ docker run --rm -p 8080:80 gradcheck
 - 静的サイトなので GitHub Pages 等でも配信可能（`vite.config.ts` の
   `base: './'` によりサブパス配下でも動く）。Dokku は自前サーバでの
   運用手段として採用した（経緯は [tech-selection.md](tech-selection.md)）。
+
+# デプロイ（GitHub Pages）
+
+`.github/workflows/deploy-pages.yml` により、`main` への push を契機に
+`pnpm build` → `dist/` を GitHub Pages へ公開する。CSV は GitHub 上に一切
+アップロードされない（ビルド成果物にはアプリコードのみが含まれる）。
+
+## 初回セットアップ（リポジトリ側）
+
+GitHub の Settings → Pages で **Source** を `GitHub Actions` に設定する
+（1度だけでよい）。設定後は `main` に push するたびに自動でデプロイされる。
+
+手動でデプロイしたい場合は Actions タブから
+`Deploy to GitHub Pages` ワークフローを `workflow_dispatch` で実行する。
