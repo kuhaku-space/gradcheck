@@ -10,8 +10,8 @@
   --info-bg: #dbeafe;
   --border: #d4d4d8;
   --muted: #71717a;
-  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI',
-    sans-serif;
+  font-family:
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", sans-serif;
   line-height: 1.6;
 }
 
@@ -54,12 +54,18 @@ h1 {
 }
 
 .dropzone {
+  display: block;
+  width: 100%;
   border: 2px dashed var(--border);
   border-radius: 0.75rem;
   padding: 2.5rem 1rem;
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s, background-color 0.15s;
+  color: inherit;
+  font: inherit;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
 }
 
 .dropzone:hover,

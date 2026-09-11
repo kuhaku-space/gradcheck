@@ -116,7 +116,9 @@ export interface RuleSetSelection {
  * - 定義より前の入学年度の場合は最古の定義を使い、警告を付ける
  *   （経過措置により要件が異なる可能性があるため）
  */
-export function ruleSetForEntryYear(entryYear: number | null): RuleSetSelection {
+export function ruleSetForEntryYear(
+  entryYear: number | null,
+): RuleSetSelection {
   const latest = RULE_SETS[RULE_SETS.length - 1]
   if (entryYear === null) {
     return {

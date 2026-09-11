@@ -1,7 +1,8 @@
 import type { RequirementResult } from '../lib/types'
 
 function StatusBadge({ satisfied }: { satisfied: boolean | null }) {
-  if (satisfied === null) return <span className="badge badge-info">要確認</span>
+  if (satisfied === null)
+    return <span className="badge badge-info">要確認</span>
   return satisfied ? (
     <span className="badge badge-ok">充足</span>
   ) : (

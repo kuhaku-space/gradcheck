@@ -66,9 +66,7 @@ describe('judge (フィクスチャCSV: 架空の在学生)', () => {
     const r = req(result, 'kokusai')
     expect(r.current).toBe(2)
     expect(r.satisfied).toBe(true)
-    const dual = result.courses.find(
-      (c) => c.name === '英語プレゼンテーション',
-    )
+    const dual = result.courses.find((c) => c.name === '英語プレゼンテーション')
     expect(dual?.bucket).toBe('kokusai')
   })
 
@@ -94,8 +92,16 @@ describe('judge (合成データ)', () => {
     const courses: CourseRecord[] = [
       course('コンピュータサイエンス研究Ⅰa', senmon, '専攻基礎科目（必修）'),
       course('コンピュータサイエンス研究Ⅰb', senmon, '専攻基礎科目（必修）'),
-      course('コンピュータサイエンス演習Ⅰ', senmon, '専攻基礎科目（選択必修1）'),
-      course('コンピュータサイエンス演習Ⅱ', senmon, '専攻基礎科目（選択必修1）'),
+      course(
+        'コンピュータサイエンス演習Ⅰ',
+        senmon,
+        '専攻基礎科目（選択必修1）',
+      ),
+      course(
+        'コンピュータサイエンス演習Ⅱ',
+        senmon,
+        '専攻基礎科目（選択必修1）',
+      ),
       kiso('選択A'),
       kiso('選択B'),
       kiso('選択C'),
@@ -125,16 +131,25 @@ describe('judge (合成データ)', () => {
 
   it('選択必修はインタラクティブ創成工学基礎演習Aでも充足する', () => {
     const result = judge([
-      course('インタラクティブ創成工学基礎演習A', senmon, '専攻基礎科目（選択必修1）', {
-        credits: 4,
-      }),
+      course(
+        'インタラクティブ創成工学基礎演習A',
+        senmon,
+        '専攻基礎科目（選択必修1）',
+        {
+          credits: 4,
+        },
+      ),
     ])
     expect(req(result, 'elective-required').satisfied).toBe(true)
   })
 
   it('演習Ⅰのみでは選択必修を満たさない', () => {
     const result = judge([
-      course('コンピュータサイエンス演習Ⅰ', senmon, '専攻基礎科目（選択必修1）'),
+      course(
+        'コンピュータサイエンス演習Ⅰ',
+        senmon,
+        '専攻基礎科目（選択必修1）',
+      ),
     ])
     expect(req(result, 'elective-required').satisfied).toBe(false)
   })
@@ -143,7 +158,11 @@ describe('judge (合成データ)', () => {
     const dualDetail =
       '国際性涵養教育系科目（高度国際性涵養教育科目・専門教育科目）'
     const result = judge([
-      course('コンピュータサイエンス基礎論', dualDetail, '専攻基礎科目（選択）'),
+      course(
+        'コンピュータサイエンス基礎論',
+        dualDetail,
+        '専攻基礎科目（選択）',
+      ),
       course('英語プレゼンテーション', dualDetail, '専攻境界科目'),
     ])
     const buckets = result.courses.map((c) => [c.name, c.bucket])
@@ -174,7 +193,9 @@ describe('judge (合成データ)', () => {
     expect(req(result, 'required').satisfied).toBe(true)
     expect(req(result, 'required').detail).toContain('指定科目オプション')
     expect(req(result, 'elective-required').satisfied).toBe(true)
-    expect(req(result, 'elective-required').detail).toContain('指定科目オプション')
+    expect(req(result, 'elective-required').detail).toContain(
+      '指定科目オプション',
+    )
     expect(req(result, 'senko-kiso').current).toBe(18)
     expect(req(result, 'total').current).toBe(18)
   })
@@ -182,7 +203,11 @@ describe('judge (合成データ)', () => {
   it('オプション指定時もCSVにある指定科目は二重加算しない', () => {
     const result = judge(
       [
-        course('コンピュータサイエンス演習Ⅰ', senmon, '専攻基礎科目（選択必修1）'),
+        course(
+          'コンピュータサイエンス演習Ⅰ',
+          senmon,
+          '専攻基礎科目（選択必修1）',
+        ),
         kiso('選択A'),
       ],
       2024,
@@ -193,7 +218,9 @@ describe('judge (合成データ)', () => {
 
   it('入学年度が不明な場合はルールセットの警告を結果に含める', () => {
     const result = judge([kiso('選択A')], null)
-    expect(result.warnings.some((w) => w.includes('推定できなかった'))).toBe(true)
+    expect(result.warnings.some((w) => w.includes('推定できなかった'))).toBe(
+      true,
+    )
   })
 
   it('要件定義より前の入学年度では注意の警告を結果に含める', () => {
@@ -223,8 +250,16 @@ describe('judge (合成データ)', () => {
       // 専攻基礎 22 + 境界 2 + 涵養 2 = 専門・涵養 26 < 28
       course('コンピュータサイエンス研究Ⅰa', senmon, '専攻基礎科目（必修）'),
       course('コンピュータサイエンス研究Ⅰb', senmon, '専攻基礎科目（必修）'),
-      course('コンピュータサイエンス演習Ⅰ', senmon, '専攻基礎科目（選択必修1）'),
-      course('コンピュータサイエンス演習Ⅱ', senmon, '専攻基礎科目（選択必修1）'),
+      course(
+        'コンピュータサイエンス演習Ⅰ',
+        senmon,
+        '専攻基礎科目（選択必修1）',
+      ),
+      course(
+        'コンピュータサイエンス演習Ⅱ',
+        senmon,
+        '専攻基礎科目（選択必修1）',
+      ),
       ...['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((s) => kiso(`選択${s}`)),
       course('境界A', senmon, '専攻境界科目'),
       course(

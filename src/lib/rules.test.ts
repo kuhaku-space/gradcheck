@@ -25,9 +25,7 @@ describe('ruleSetForEntryYear', () => {
   })
 
   it('定義より前の入学年度には最古の定義＋警告を返す', () => {
-    const { ruleSet, warning } = ruleSetForEntryYear(
-      earliest.fromEntryYear - 1,
-    )
+    const { ruleSet, warning } = ruleSetForEntryYear(earliest.fromEntryYear - 1)
     expect(ruleSet).toBe(earliest)
     expect(warning).toContain('要件定義がない')
   })

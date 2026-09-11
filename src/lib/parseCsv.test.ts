@@ -62,7 +62,9 @@ describe('parseGradesText', () => {
     const result = parseGradesText(sampleText)
     expect(result.courses[2].category).toBe('unknown')
     expect(result.courses[2].passed).toBe(false)
-    expect(result.warnings.some((warning) => warning.includes('未知科目'))).toBe(true)
+    expect(
+      result.warnings.some((warning) => warning.includes('未知科目')),
+    ).toBe(true)
   })
 
   it('列構成からCSVとTXTを自動判別する', () => {
@@ -73,12 +75,32 @@ describe('parseGradesText', () => {
 
 describe('classifyCourse', () => {
   const cases: Array<[string, string, string]> = [
-    ['専門教育系科目（専門教育科目）', '専攻基礎科目（必修）', 'senko-kiso-required'],
-    ['専門教育系科目（専門教育科目）', '専攻基礎科目（選択必修1）', 'senko-kiso-elective-required'],
-    ['専門教育系科目（専門教育科目）', '専攻基礎科目（選択）', 'senko-kiso-elective'],
+    [
+      '専門教育系科目（専門教育科目）',
+      '専攻基礎科目（必修）',
+      'senko-kiso-required',
+    ],
+    [
+      '専門教育系科目（専門教育科目）',
+      '専攻基礎科目（選択必修1）',
+      'senko-kiso-elective-required',
+    ],
+    [
+      '専門教育系科目（専門教育科目）',
+      '専攻基礎科目（選択）',
+      'senko-kiso-elective',
+    ],
     ['専門教育系科目（専門教育科目）', '専攻境界科目', 'senko-kyokai'],
-    ['教養教育系科目（高度教養教育科目）', '高度教養教育科目（他学部・他研究科等）', 'kodo-kyoyo'],
-    ['国際性涵養教育系科目（高度国際性涵養教育科目・専門教育科目）', '専攻基礎科目（選択）', 'dual'],
+    [
+      '教養教育系科目（高度教養教育科目）',
+      '高度教養教育科目（他学部・他研究科等）',
+      'kodo-kyoyo',
+    ],
+    [
+      '国際性涵養教育系科目（高度国際性涵養教育科目・専門教育科目）',
+      '専攻基礎科目（選択）',
+      'dual',
+    ],
     ['国際性涵養教育系科目（高度国際性涵養教育科目）', '', 'kokusai'],
     ['謎の区分', '謎の小区分', 'unknown'],
   ]

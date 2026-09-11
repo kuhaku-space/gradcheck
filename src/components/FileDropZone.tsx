@@ -15,26 +15,24 @@ export function FileDropZone({ onFile }: { onFile: (file: File) => void }) {
   )
 
   return (
-    <div
-      className={`dropzone ${dragging ? 'dropzone-active' : ''}`}
-      role="button"
-      tabIndex={0}
-      onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click()
-      }}
-      onDragOver={(e) => {
-        e.preventDefault()
-        setDragging(true)
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
-    >
-      <p>
-        KOAN の成績 CSV または SIRS の成績 TXT をドラッグ＆ドロップ
-        <br />
-        <span className="dropzone-sub">またはクリックしてファイルを選択</span>
-      </p>
+    <>
+      <button
+        type="button"
+        className={`dropzone ${dragging ? 'dropzone-active' : ''}`}
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault()
+          setDragging(true)
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+      >
+        <p>
+          KOAN の成績 CSV または SIRS の成績 TXT をドラッグ＆ドロップ
+          <br />
+          <span className="dropzone-sub">またはクリックしてファイルを選択</span>
+        </p>
+      </button>
       <input
         ref={inputRef}
         type="file"
@@ -46,6 +44,6 @@ export function FileDropZone({ onFile }: { onFile: (file: File) => void }) {
           e.target.value = ''
         }}
       />
-    </div>
+    </>
   )
 }
