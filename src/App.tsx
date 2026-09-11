@@ -80,7 +80,7 @@ export default function App() {
         指定科目を修得済みとして判定する
       </label>
       <p className="judge-option-note">
-        研究Ⅰa・Ⅰb、演習Ⅰ・Ⅱ、セミナーⅠ・Ⅱ、研究Ⅱa・Ⅱbの単位を補います。
+        研究Ⅰa・Ⅰb・Ⅱa・Ⅱb、演習Ⅰ・Ⅱ、セミナーⅠ・Ⅱの単位を補います。
       </p>
 
       {error && <div className="banner banner-error">{error}</div>}
