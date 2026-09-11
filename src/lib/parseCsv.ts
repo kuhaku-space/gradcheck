@@ -15,6 +15,64 @@ import Papa from 'papaparse'
 import { courseMetadataForCode } from './courseCatalog'
 import type { Category, CourseRecord, ParseResult } from './types'
 
+type CsvRow = string[]
+
+interface ParsedTable {
+  rows: CsvRow[]
+  header: string[]
+  warnings: string[]
+}
+
+function parseTable(text: string, source: 'CSV' | 'TXT'): ParsedTable {
+  const parsed = Papa.parse<CsvRow>(text.trim(), {
+    skipEmptyLines: 'greedy',
+  })
+  const warnings = parsed.errors
+    .filter((error) => error.type !== 'FieldMismatch')
+    .map(
+      (error) =>
+        `${source}解析警告 (行${(error.row ?? 0) + 1}): ${error.message}`,
+    )
+  const headerIndex = parsed.data.findIndex((row) =>
+    row.some((cell) => cell.trim() === '開講科目名'),
+  )
+  if (headerIndex < 0) {
+    throw new Error(
+      '成績データのヘッダ行（「開講科目名」を含む行）が見つかりません。',
+    )
+  }
+  return {
+    rows: parsed.data.slice(headerIndex + 1),
+    header: parsed.data[headerIndex].map((cell) => cell.trim()),
+    warnings,
+  }
+}
+
+function validateColumns(
+  indexes: Record<string, number>,
+  source: 'CSV' | 'TXT',
+): void {
+  const missing = Object.entries(indexes)
+    .filter(([, index]) => index < 0)
+    .map(([name]) => name)
+  if (missing.length > 0) {
+    throw new Error(
+      `成績 ${source} に必要な列が見つかりません: ${missing.join(', ')}`,
+    )
+  }
+}
+
+function finishParseResult(
+  studentId: string | null,
+  courses: CourseRecord[],
+  warnings: string[],
+): ParseResult {
+  if (courses.length === 0) {
+    warnings.push('科目データが 1 件も読み取れませんでした。')
+  }
+  return { studentId, courses, warnings }
+}
+
 /** 科目詳細区分・科目小区分から教育課程上の区分を決める */
 export function classifyCourse(
   detailCategory: string,
@@ -39,28 +97,7 @@ export function classifyCourse(
 }
 
 export function parseGradesCsv(text: string): ParseResult {
-  const warnings: string[] = []
-  const parsed = Papa.parse<string[]>(text.trim(), {
-    skipEmptyLines: 'greedy',
-  })
-  for (const err of parsed.errors) {
-    // 行末の「,\t」による FieldMismatch は仕様なので握りつぶす
-    if (err.type !== 'FieldMismatch') {
-      warnings.push(`CSV解析警告 (行${(err.row ?? 0) + 1}): ${err.message}`)
-    }
-  }
-
-  const rows = parsed.data
-  const headerIndex = rows.findIndex((row) =>
-    row.some((cell) => cell.trim() === '開講科目名'),
-  )
-  if (headerIndex < 0) {
-    throw new Error(
-      '成績データのヘッダ行（「開講科目名」を含む行）が見つかりません。KOAN からダウンロードした成績 CSV を指定してください。',
-    )
-  }
-
-  const header = rows[headerIndex].map((cell) => cell.trim())
+  const { rows, header, warnings } = parseTable(text, 'CSV')
   const col = (name: string) => header.indexOf(name)
   const idx = {
     studentId: col('学籍番号'),
@@ -74,16 +111,11 @@ export function parseGradesCsv(text: string): ParseResult {
     grade: col('評語'),
     passed: col('合否'),
   }
-  const missing = Object.entries(idx)
-    .filter(([, i]) => i < 0)
-    .map(([k]) => k)
-  if (missing.length > 0) {
-    throw new Error(`成績 CSV に必要な列が見つかりません: ${missing.join(', ')}`)
-  }
+  validateColumns(idx, 'CSV')
 
   const courses: CourseRecord[] = []
   let studentId: string | null = null
-  for (const row of rows.slice(headerIndex + 1)) {
+  for (const row of rows) {
     const no = Number.parseInt(row[idx.no] ?? '', 10)
     // No. が数値でない行はデータ行ではない（フッタ・別セクション等）
     if (Number.isNaN(no)) continue
@@ -111,10 +143,7 @@ export function parseGradesCsv(text: string): ParseResult {
     })
   }
 
-  if (courses.length === 0) {
-    warnings.push('科目データが 1 件も読み取れませんでした。')
-  }
-  return { studentId, courses, warnings }
+  return finishParseResult(studentId, courses, warnings)
 }
 
 /**
@@ -123,19 +152,7 @@ export function parseGradesCsv(text: string): ParseResult {
  * 時間割コードから区分と単位数を補う。未知の科目は区分不明として警告する。
  */
 export function parseGradesText(text: string): ParseResult {
-  const warnings: string[] = []
-  const parsed = Papa.parse<string[]>(text.trim(), {
-    skipEmptyLines: 'greedy',
-  })
-  const rows = parsed.data
-  const headerIndex = rows.findIndex((row) =>
-    row.some((cell) => cell.trim() === '開講科目名'),
-  )
-  if (headerIndex < 0) {
-    throw new Error('成績データのヘッダ行（「開講科目名」を含む行）が見つかりません。')
-  }
-
-  const header = rows[headerIndex].map((cell) => cell.trim())
+  const { rows, header, warnings } = parseTable(text, 'TXT')
   const col = (name: string) => header.indexOf(name)
   const idx = {
     studentId: col('学籍番号'),
@@ -146,16 +163,11 @@ export function parseGradesText(text: string): ParseResult {
     grade: col('評語'),
     passed: col('合否'),
   }
-  const missing = Object.entries(idx)
-    .filter(([, i]) => i < 0)
-    .map(([name]) => name)
-  if (missing.length > 0) {
-    throw new Error(`成績 TXT に必要な列が見つかりません: ${missing.join(', ')}`)
-  }
+  validateColumns(idx, 'TXT')
 
   const courses: CourseRecord[] = []
   let studentId: string | null = null
-  for (const row of rows.slice(headerIndex + 1)) {
+  for (const row of rows) {
     const no = Number.parseInt(row[idx.no] ?? '', 10)
     if (Number.isNaN(no)) continue
 
@@ -188,10 +200,7 @@ export function parseGradesText(text: string): ParseResult {
     })
   }
 
-  if (courses.length === 0) {
-    warnings.push('科目データが 1 件も読み取れませんでした。')
-  }
-  return { studentId, courses, warnings }
+  return finishParseResult(studentId, courses, warnings)
 }
 
 /** 列構成からKOAN CSVまたはSIRS TXTを自動判別してパースする。 */

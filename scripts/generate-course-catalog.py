@@ -50,6 +50,10 @@ def number(value: float) -> str:
     return str(int(value)) if value.is_integer() else str(value)
 
 
+def property_name(code: str) -> str:
+    return code if re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", code) else f"'{code}'"
+
+
 def main() -> None:
     if len(sys.argv) != 4:
         raise SystemExit("usage: generate-course-catalog.py KYoyo.xlsx Kokusai.xlsx OUTPUT.ts")
@@ -69,10 +73,13 @@ def main() -> None:
         "// Run scripts/generate-course-catalog.py to update; do not edit manually.",
         "import type { Category } from './types'",
         "",
-        "export const EXTERNAL_COURSE_CATALOG: Record<string, readonly [number, Category]> = {",
+        "export const EXTERNAL_COURSE_CATALOG: Record<",
+        "  string,",
+        "  readonly [number, Category]",
+        "> = {",
     ]
     lines.extend(
-        f"  '{code}': [{number(credits)}, '{category}'],"
+        f"  {property_name(code)}: [{number(credits)}, '{category}'],"
         for code, (credits, category) in sorted(rows.items())
     )
     lines.extend(["}", ""])

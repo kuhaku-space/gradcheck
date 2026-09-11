@@ -4,12 +4,12 @@
  * 適用する要件は入学年度から選んだルールセット（rules.ts）で決まる。
  */
 import { normalizeCourseName } from './normalize'
-import { ruleSetForEntryYear, type RuleSet } from './rules'
+import { type RuleSet, ruleSetForEntryYear } from './rules'
 import type {
   Bucket,
   CourseRecord,
-  JudgeResult,
   JudgedCourse,
+  JudgeResult,
   RequirementResult,
 } from './types'
 
@@ -81,6 +81,7 @@ export function judge(
   entryYear: number | null = null,
   options: JudgeOptions = {},
 ): JudgeResult {
+  const { assumeDesignatedCoursesPassed = false } = options
   const warnings: string[] = []
   const { ruleSet: rules, warning: ruleWarning } =
     ruleSetForEntryYear(entryYear)
@@ -96,11 +97,11 @@ export function judge(
     (n) => !passedNames.has(n),
   )
   const requiredOk =
-    options.assumeDesignatedCoursesPassed || missingRequired.length === 0
+    assumeDesignatedCoursesPassed || missingRequired.length === 0
   const missingAssumedCourses = rules.assumedCourses.filter(
     (n) => !passedNames.has(n),
   )
-  const assumedCourseCredits = options.assumeDesignatedCoursesPassed
+  const assumedCourseCredits = assumeDesignatedCoursesPassed
     ? missingAssumedCourses.length * rules.assumedCourseCredits
     : 0
 
@@ -108,8 +109,7 @@ export function judge(
   const electivePassedFromCsv = rules.electiveRequiredGroups.some((group) =>
     group.every((n) => passedNames.has(n)),
   )
-  const electiveOk =
-    options.assumeDesignatedCoursesPassed || electivePassedFromCsv
+  const electiveOk = assumeDesignatedCoursesPassed || electivePassedFromCsv
 
   // 3〜7. 単位数要件
   const senkoKiso = sumCredits(judged, 'senko-kiso') + assumedCourseCredits
@@ -138,7 +138,8 @@ export function judge(
     satisfied: current >= required,
     current,
     required,
-    detail: current >= required ? '充足' : `あと ${required - current} 単位必要`,
+    detail:
+      current >= required ? '充足' : `あと ${required - current} 単位必要`,
   })
 
   const requirements: RequirementResult[] = [
@@ -147,7 +148,7 @@ export function judge(
       label: '必修科目の修得',
       satisfied: requiredOk,
       detail: requiredOk
-        ? options.assumeDesignatedCoursesPassed && missingRequired.length > 0
+        ? assumeDesignatedCoursesPassed && missingRequired.length > 0
           ? `${rules.requiredCoursesLabel} を指定科目オプションにより修得済みとして判定`
           : `${rules.requiredCoursesLabel} を修得済み`
         : `未修得の必修科目: ${missingRequired.join('、')}`,
@@ -157,12 +158,17 @@ export function judge(
       label: '選択必修の修得',
       satisfied: electiveOk,
       detail: electiveOk
-        ? options.assumeDesignatedCoursesPassed && !electivePassedFromCsv
+        ? assumeDesignatedCoursesPassed && !electivePassedFromCsv
           ? 'コンピュータサイエンス演習Ⅰ・Ⅱを指定科目オプションにより修得済みとして判定'
           : '選択必修グループを修得済み'
         : `${rules.electiveRequiredLabel} を修得してください`,
     },
-    creditRequirement('senko-kiso', '専攻基礎科目', senkoKiso, rules.senkoKisoMin),
+    creditRequirement(
+      'senko-kiso',
+      '専攻基礎科目',
+      senkoKiso,
+      rules.senkoKisoMin,
+    ),
     creditRequirement('senmon', '専門教育科目', senmon, rules.senmonMin),
     // 修了要件表の積算ツリー「合計30 = 高度教養(2) + 専門・涵養(28)」より。
     // 高度教養教育科目を2単位超修得しても総計30単位の残り28単位は
@@ -179,13 +185,19 @@ export function judge(
       kokusai,
       rules.kokusaiMin,
     ),
-    creditRequirement('kodo-kyoyo', '高度教養教育科目', kodoKyoyo, rules.kodoKyoyoMin),
+    creditRequirement(
+      'kodo-kyoyo',
+      '高度教養教育科目',
+      kodoKyoyo,
+      rules.kodoKyoyoMin,
+    ),
     creditRequirement('total', '総修得単位', total, rules.totalMin),
     {
       id: 'research-guidance',
       label: '研究指導（別に定めるもの）',
       satisfied: null,
-      detail: '成績 CSV からは判定できません。指導教員・教務係に確認してください。',
+      detail:
+        '成績 CSV からは判定できません。指導教員・教務係に確認してください。',
     },
     // 必要単位数 0 の区分はその年度の要件に存在しない（2017〜2018年度入学など）
   ].filter((r) => r.required === undefined || r.required > 0)

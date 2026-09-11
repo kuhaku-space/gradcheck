@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
+import { CourseTable } from './components/CourseTable'
+import { FileDropZone } from './components/FileDropZone'
+import { RequirementTable } from './components/RequirementTable'
 import { decodeCsvBytes } from './lib/decode'
 import { judge } from './lib/judge'
 import { parseGradesFile } from './lib/parseCsv'
 import { entryYearFromStudentId } from './lib/studentId'
 import type { CourseRecord } from './lib/types'
-import { CourseTable } from './components/CourseTable'
-import { FileDropZone } from './components/FileDropZone'
-import { RequirementTable } from './components/RequirementTable'
 
 interface LoadedResult {
   fileName: string
@@ -30,6 +30,10 @@ export default function App() {
           })
         : null,
     [loaded, assumeDesignatedCoursesPassed],
+  )
+  const warnings = useMemo(
+    () => (loaded && result ? [...loaded.warnings, ...result.warnings] : []),
+    [loaded, result],
   )
 
   const handleFile = useCallback(async (file: File) => {
@@ -55,7 +59,8 @@ export default function App() {
       <header>
         <h1>修了要件チェッカー</h1>
         <p className="subtitle">
-          大阪大学大学院情報科学研究科 博士前期課程（コンピュータサイエンス専攻）
+          大阪大学大学院情報科学研究科
+          博士前期課程（コンピュータサイエンス専攻）
         </p>
       </header>
 
@@ -68,7 +73,9 @@ export default function App() {
         <input
           type="checkbox"
           checked={assumeDesignatedCoursesPassed}
-          onChange={(event) => setAssumeDesignatedCoursesPassed(event.target.checked)}
+          onChange={(event) =>
+            setAssumeDesignatedCoursesPassed(event.target.checked)
+          }
         />
         指定科目を修得済みとして判定する
       </label>
@@ -97,10 +104,10 @@ export default function App() {
             </span>
           </div>
 
-          {[...loaded.warnings, ...result.warnings].length > 0 && (
+          {warnings.length > 0 && (
             <div className="banner banner-warn">
               <ul>
-                {[...loaded.warnings, ...result.warnings].map((w) => (
+                {warnings.map((w) => (
                   <li key={w}>{w}</li>
                 ))}
               </ul>
