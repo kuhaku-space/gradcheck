@@ -31,14 +31,14 @@ export function FileDropZone({ onFile }: { onFile: (file: File) => void }) {
       onDrop={handleDrop}
     >
       <p>
-        KOAN の成績 CSV をドラッグ＆ドロップ
+        KOAN の成績 CSV または SIRS の成績 TXT をドラッグ＆ドロップ
         <br />
         <span className="dropzone-sub">またはクリックしてファイルを選択</span>
       </p>
       <input
         ref={inputRef}
         type="file"
-        accept=".csv,text/csv"
+        accept=".csv,.txt,text/csv,text/plain"
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0]

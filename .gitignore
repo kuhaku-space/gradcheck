@@ -7,3 +7,4 @@ dist
 # 実データ由来のCSVをテストフィクスチャに流用してはならない。
 # テスト用の架空データは src/lib/__fixtures__/sampleCsv.ts に文字列で埋め込む。
 *.csv
+*.txt

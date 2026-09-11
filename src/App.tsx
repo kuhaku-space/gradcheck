@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { decodeCsvBytes } from './lib/decode'
 import { judge } from './lib/judge'
-import { parseGradesCsv } from './lib/parseCsv'
+import { parseGradesFile } from './lib/parseCsv'
 import { entryYearFromStudentId } from './lib/studentId'
 import type { CourseRecord } from './lib/types'
 import { CourseTable } from './components/CourseTable'
@@ -36,7 +36,7 @@ export default function App() {
     setError(null)
     try {
       const text = decodeCsvBytes(await file.arrayBuffer())
-      const parsed = parseGradesCsv(text)
+      const parsed = parseGradesFile(text)
       setLoaded({
         fileName: file.name,
         studentId: parsed.studentId,

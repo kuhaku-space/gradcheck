@@ -12,6 +12,7 @@
  * 各行は行末に「,\t」のゴミが付くため、余剰列は無視する。
  */
 import Papa from 'papaparse'
+import { courseMetadataForCode } from './courseCatalog'
 import type { Category, CourseRecord, ParseResult } from './types'
 
 /** 科目詳細区分・科目小区分から教育課程上の区分を決める */
@@ -114,4 +115,88 @@ export function parseGradesCsv(text: string): ParseResult {
     warnings.push('科目データが 1 件も読み取れませんでした。')
   }
   return { studentId, courses, warnings }
+}
+
+/**
+ * SIRS のテキスト出力をパースする。
+ * この形式には科目区分・単位数・学期がないため、公式の2026年度科目表を元に
+ * 時間割コードから区分と単位数を補う。未知の科目は区分不明として警告する。
+ */
+export function parseGradesText(text: string): ParseResult {
+  const warnings: string[] = []
+  const parsed = Papa.parse<string[]>(text.trim(), {
+    skipEmptyLines: 'greedy',
+  })
+  const rows = parsed.data
+  const headerIndex = rows.findIndex((row) =>
+    row.some((cell) => cell.trim() === '開講科目名'),
+  )
+  if (headerIndex < 0) {
+    throw new Error('成績データのヘッダ行（「開講科目名」を含む行）が見つかりません。')
+  }
+
+  const header = rows[headerIndex].map((cell) => cell.trim())
+  const col = (name: string) => header.indexOf(name)
+  const idx = {
+    studentId: col('学籍番号'),
+    no: col('No'),
+    code: col('時間割コード'),
+    name: col('開講科目名'),
+    year: col('修得年度'),
+    grade: col('評語'),
+    passed: col('合否'),
+  }
+  const missing = Object.entries(idx)
+    .filter(([, i]) => i < 0)
+    .map(([name]) => name)
+  if (missing.length > 0) {
+    throw new Error(`成績 TXT に必要な列が見つかりません: ${missing.join(', ')}`)
+  }
+
+  const courses: CourseRecord[] = []
+  let studentId: string | null = null
+  for (const row of rows.slice(headerIndex + 1)) {
+    const no = Number.parseInt(row[idx.no] ?? '', 10)
+    if (Number.isNaN(no)) continue
+
+    studentId ??= row[idx.studentId]?.trim() || null
+    const name = (row[idx.name] ?? '').trim()
+    if (name === '') {
+      warnings.push(`行 No.${no} の科目名が読み取れませんでした。`)
+      continue
+    }
+    const code = (row[idx.code] ?? '').trim().toUpperCase()
+    const metadata = courseMetadataForCode(code)
+    const detailCategory = metadata?.detailCategory ?? ''
+    const subCategory = metadata?.subCategory ?? ''
+    if (!metadata) {
+      warnings.push(
+        `${name}（時間割コード ${code || '不明'}）は2026年度科目表にないため区分不明として扱います。`,
+      )
+    }
+    courses.push({
+      no,
+      detailCategory,
+      subCategory,
+      name,
+      credits: metadata?.credits ?? 0,
+      year: (row[idx.year] ?? '').trim(),
+      term: '',
+      grade: (row[idx.grade] ?? '').trim(),
+      passed: (row[idx.passed] ?? '').trim() === '合',
+      category: metadata?.category ?? 'unknown',
+    })
+  }
+
+  if (courses.length === 0) {
+    warnings.push('科目データが 1 件も読み取れませんでした。')
+  }
+  return { studentId, courses, warnings }
+}
+
+/** 列構成からKOAN CSVまたはSIRS TXTを自動判別してパースする。 */
+export function parseGradesFile(text: string): ParseResult {
+  return text.includes('科目詳細区分')
+    ? parseGradesCsv(text)
+    : parseGradesText(text)
 }

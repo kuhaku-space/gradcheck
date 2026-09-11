@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { sampleCsv } from './__fixtures__/sampleCsv'
-import { classifyCourse, parseGradesCsv } from './parseCsv'
+import {
+  classifyCourse,
+  parseGradesCsv,
+  parseGradesFile,
+  parseGradesText,
+} from './parseCsv'
 
 describe('parseGradesCsv', () => {
   it('副専攻セクションを読み飛ばして科目行だけを取り出す', () => {
@@ -32,6 +37,37 @@ describe('parseGradesCsv', () => {
 
   it('ヘッダ行がない場合はエラーを投げる', () => {
     expect(() => parseGradesCsv('a,b,c\n1,2,3')).toThrow(/ヘッダ行/)
+  })
+})
+
+describe('parseGradesText', () => {
+  const sampleText = `"所属コード","学籍番号 ","No","時間割コード","開講科目名 ","修得年度","評語","合否"
+"330103","33C99999","1","331003","情報科学特別講義I","2026","Ａ","合"
+"330103","33C99999","2","331325","コンピュータサイエンス基礎論","2026","Ａ＋","合"
+"330103","33C99999","3","999999","未知科目","2026","Ｆ","否"`
+
+  it('省略された単位数と既知科目の区分を補う', () => {
+    const result = parseGradesText(sampleText)
+    expect(result.studentId).toBe('33C99999')
+    expect(result.courses).toHaveLength(3)
+    expect(result.courses[0]).toMatchObject({
+      credits: 2,
+      term: '',
+      category: 'senko-kiso-elective',
+    })
+    expect(result.courses[1].category).toBe('dual')
+  })
+
+  it('未知科目は区分不明として警告する', () => {
+    const result = parseGradesText(sampleText)
+    expect(result.courses[2].category).toBe('unknown')
+    expect(result.courses[2].passed).toBe(false)
+    expect(result.warnings.some((warning) => warning.includes('未知科目'))).toBe(true)
+  })
+
+  it('列構成からCSVとTXTを自動判別する', () => {
+    expect(parseGradesFile(sampleCsv).courses).toHaveLength(14)
+    expect(parseGradesFile(sampleText).courses).toHaveLength(3)
   })
 })
 
