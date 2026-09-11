@@ -1,2 +1,7 @@
 [tools]
-pnpm = "latest"
+node = "24"
+pnpm = "11.10.0"
+
+[tasks.dev]
+description = "Vite 開発サーバーを起動する"
+run = "pnpm dev"

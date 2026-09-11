@@ -84,6 +84,27 @@ h1 {
   text-align: center;
 }
 
+.judge-option {
+  display: flex;
+  width: fit-content;
+  margin: 1rem auto 0;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.judge-option input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.judge-option-note {
+  margin: 0.15rem 0 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
 .banner {
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;

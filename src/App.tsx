@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { decodeCsvBytes } from './lib/decode'
 import { judge } from './lib/judge'
 import { parseGradesCsv } from './lib/parseCsv'
 import { entryYearFromStudentId } from './lib/studentId'
-import type { JudgeResult } from './lib/types'
+import type { CourseRecord } from './lib/types'
 import { CourseTable } from './components/CourseTable'
 import { FileDropZone } from './components/FileDropZone'
 import { RequirementTable } from './components/RequirementTable'
@@ -11,25 +11,38 @@ import { RequirementTable } from './components/RequirementTable'
 interface LoadedResult {
   fileName: string
   studentId: string | null
-  result: JudgeResult
+  courses: CourseRecord[]
+  entryYear: number | null
   warnings: string[]
 }
 
 export default function App() {
   const [loaded, setLoaded] = useState<LoadedResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [assumeDesignatedCoursesPassed, setAssumeDesignatedCoursesPassed] =
+    useState(false)
+
+  const result = useMemo(
+    () =>
+      loaded
+        ? judge(loaded.courses, loaded.entryYear, {
+            assumeDesignatedCoursesPassed,
+          })
+        : null,
+    [loaded, assumeDesignatedCoursesPassed],
+  )
 
   const handleFile = useCallback(async (file: File) => {
     setError(null)
     try {
       const text = decodeCsvBytes(await file.arrayBuffer())
       const parsed = parseGradesCsv(text)
-      const result = judge(parsed.courses, entryYearFromStudentId(parsed.studentId))
       setLoaded({
         fileName: file.name,
         studentId: parsed.studentId,
-        result,
-        warnings: [...parsed.warnings, ...result.warnings],
+        courses: parsed.courses,
+        entryYear: entryYearFromStudentId(parsed.studentId),
+        warnings: parsed.warnings,
       })
     } catch (e) {
       setLoaded(null)
@@ -51,30 +64,43 @@ export default function App() {
         ファイルはブラウザ内でのみ処理され、サーバには送信されません。
       </p>
 
+      <label className="judge-option">
+        <input
+          type="checkbox"
+          checked={assumeDesignatedCoursesPassed}
+          onChange={(event) => setAssumeDesignatedCoursesPassed(event.target.checked)}
+        />
+        指定科目を修得済みとして判定する
+      </label>
+      <p className="judge-option-note">
+        研究Ⅰa・Ⅰb、演習Ⅰ・Ⅱ、セミナーⅠ・Ⅱ、研究Ⅱa・Ⅱbの単位を補います。
+      </p>
+
       {error && <div className="banner banner-error">{error}</div>}
 
-      {loaded && (
+      {loaded && result && (
         <>
           <div
-            className={`banner ${loaded.result.overall ? 'banner-ok' : 'banner-ng'}`}
+            className={`banner ${result.overall ? 'banner-ok' : 'banner-ng'}`}
           >
             <strong>
-              {loaded.result.overall
+              {result.overall
                 ? '単位要件を満たしています'
                 : '単位要件を満たしていません'}
             </strong>
             <span className="banner-meta">
               {loaded.fileName}
               {loaded.studentId && ` ・ 学籍番号 ${loaded.studentId}`}
-              {loaded.result.entryYear && ` ・ ${loaded.result.entryYear}年度入学`}
-              {` ・ ${loaded.result.ruleSetLabel}`}
+              {result.entryYear && ` ・ ${result.entryYear}年度入学`}
+              {` ・ ${result.ruleSetLabel}`}
+              {assumeDesignatedCoursesPassed && ' ・ 指定科目修得済み扱い'}
             </span>
           </div>
 
-          {loaded.warnings.length > 0 && (
+          {[...loaded.warnings, ...result.warnings].length > 0 && (
             <div className="banner banner-warn">
               <ul>
-                {loaded.warnings.map((w) => (
+                {[...loaded.warnings, ...result.warnings].map((w) => (
                   <li key={w}>{w}</li>
                 ))}
               </ul>
@@ -83,12 +109,12 @@ export default function App() {
 
           <section>
             <h2>要件別の充足状況</h2>
-            <RequirementTable requirements={loaded.result.requirements} />
+            <RequirementTable requirements={result.requirements} />
           </section>
 
           <section>
             <h2>読み込んだ科目一覧</h2>
-            <CourseTable courses={loaded.result.courses} />
+            <CourseTable courses={result.courses} />
           </section>
         </>
       )}

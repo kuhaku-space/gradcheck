@@ -13,6 +13,11 @@ import type {
   RequirementResult,
 } from './types'
 
+export interface JudgeOptions {
+  /** CSV にない指定科目を修得済みとして、その単位も算入する */
+  assumeDesignatedCoursesPassed?: boolean
+}
+
 /**
  * 二重区分（専門教育科目・高度国際性涵養教育科目）の充当規則:
  * 高度国際性涵養教育科目に優先して充当する。ただし必要修得単位を
@@ -74,6 +79,7 @@ function sumCredits(courses: JudgedCourse[], bucket: Bucket): number {
 export function judge(
   courses: CourseRecord[],
   entryYear: number | null = null,
+  options: JudgeOptions = {},
 ): JudgeResult {
   const warnings: string[] = []
   const { ruleSet: rules, warning: ruleWarning } =
@@ -89,15 +95,24 @@ export function judge(
   const missingRequired = rules.requiredCourses.filter(
     (n) => !passedNames.has(n),
   )
-  const requiredOk = missingRequired.length === 0
+  const requiredOk =
+    options.assumeDesignatedCoursesPassed || missingRequired.length === 0
+  const missingAssumedCourses = rules.assumedCourses.filter(
+    (n) => !passedNames.has(n),
+  )
+  const assumedCourseCredits = options.assumeDesignatedCoursesPassed
+    ? missingAssumedCourses.length * rules.assumedCourseCredits
+    : 0
 
   // 2. 選択必修（いずれかのグループを完全修得）
-  const electiveOk = rules.electiveRequiredGroups.some((group) =>
+  const electivePassedFromCsv = rules.electiveRequiredGroups.some((group) =>
     group.every((n) => passedNames.has(n)),
   )
+  const electiveOk =
+    options.assumeDesignatedCoursesPassed || electivePassedFromCsv
 
   // 3〜7. 単位数要件
-  const senkoKiso = sumCredits(judged, 'senko-kiso')
+  const senkoKiso = sumCredits(judged, 'senko-kiso') + assumedCourseCredits
   const senkoKyokai = sumCredits(judged, 'senko-kyokai')
   const kodoKyoyo = sumCredits(judged, 'kodo-kyoyo')
   const kokusai = sumCredits(judged, 'kokusai')
@@ -132,7 +147,9 @@ export function judge(
       label: '必修科目の修得',
       satisfied: requiredOk,
       detail: requiredOk
-        ? `${rules.requiredCoursesLabel} を修得済み`
+        ? options.assumeDesignatedCoursesPassed && missingRequired.length > 0
+          ? `${rules.requiredCoursesLabel} を指定科目オプションにより修得済みとして判定`
+          : `${rules.requiredCoursesLabel} を修得済み`
         : `未修得の必修科目: ${missingRequired.join('、')}`,
     },
     {
@@ -140,7 +157,9 @@ export function judge(
       label: '選択必修の修得',
       satisfied: electiveOk,
       detail: electiveOk
-        ? '選択必修グループを修得済み'
+        ? options.assumeDesignatedCoursesPassed && !electivePassedFromCsv
+          ? 'コンピュータサイエンス演習Ⅰ・Ⅱを指定科目オプションにより修得済みとして判定'
+          : '選択必修グループを修得済み'
         : `${rules.electiveRequiredLabel} を修得してください`,
     },
     creditRequirement('senko-kiso', '専攻基礎科目', senkoKiso, rules.senkoKisoMin),

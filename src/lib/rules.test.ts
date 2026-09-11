@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { normalizeCourseName } from './normalize'
 import { RULE_SETS, ruleSetForEntryYear } from './rules'
 
 describe('ruleSetForEntryYear', () => {
@@ -41,5 +42,28 @@ describe('ruleSetForEntryYear', () => {
   it('ルールセットは入学年度の昇順に並んでいる', () => {
     const years = RULE_SETS.map((r) => r.fromEntryYear)
     expect(years).toEqual([...years].sort((a, b) => a - b))
+  })
+
+  it('修了要件の必修は研究Ⅰa・Ⅰbだけを扱う', () => {
+    expect(latest.requiredCourses).toEqual(
+      ['コンピュータサイエンス研究Ⅰa', 'コンピュータサイエンス研究Ⅰb'].map(
+        normalizeCourseName,
+      ),
+    )
+  })
+
+  it('指定8科目を修得済みオプションの加算対象にする', () => {
+    expect(latest.assumedCourses).toEqual(
+      [
+        'コンピュータサイエンス研究Ⅰa',
+        'コンピュータサイエンス研究Ⅰb',
+        'コンピュータサイエンス演習Ⅰ',
+        'コンピュータサイエンス演習Ⅱ',
+        'コンピュータサイエンスセミナーⅠ',
+        'コンピュータサイエンスセミナーⅡ',
+        'コンピュータサイエンス研究Ⅱa',
+        'コンピュータサイエンス研究Ⅱb',
+      ].map(normalizeCourseName),
+    )
   })
 })

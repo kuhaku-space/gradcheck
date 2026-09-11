@@ -22,6 +22,10 @@ export interface RuleSet {
   label: string
   /** 必修科目（すべて合格が必要）。normalizeCourseName 済み */
   requiredCourses: string[]
+  /** 「指定科目を修得済み」オプションで補う科目。normalizeCourseName 済み */
+  assumedCourses: string[]
+  /** オプションで補う科目1科目あたりの単位数 */
+  assumedCourseCredits: number
   /** 必修科目の表示用ラベル */
   requiredCoursesLabel: string
   /** 選択必修: いずれかのグループの科目をすべて合格すること。normalizeCourseName 済み */
@@ -50,6 +54,17 @@ const CS_REQUIRED = {
     'コンピュータサイエンス研究Ⅰa',
     'コンピュータサイエンス研究Ⅰb',
   ].map(normalizeCourseName),
+  assumedCourses: [
+    'コンピュータサイエンス研究Ⅰa',
+    'コンピュータサイエンス研究Ⅰb',
+    'コンピュータサイエンス演習Ⅰ',
+    'コンピュータサイエンス演習Ⅱ',
+    'コンピュータサイエンスセミナーⅠ',
+    'コンピュータサイエンスセミナーⅡ',
+    'コンピュータサイエンス研究Ⅱa',
+    'コンピュータサイエンス研究Ⅱb',
+  ].map(normalizeCourseName),
+  assumedCourseCredits: 2,
   requiredCoursesLabel: 'コンピュータサイエンス研究Ⅰa・Ⅰb',
   electiveRequiredGroups: [
     ['コンピュータサイエンス演習Ⅰ', 'コンピュータサイエンス演習Ⅱ'],

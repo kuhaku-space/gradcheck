@@ -167,6 +167,30 @@ describe('judge (合成データ)', () => {
     expect(r.detail).toContain('研究')
   })
 
+  it('オプション指定時はCSVにない指定科目を単位に算入して必修も充足にする', () => {
+    const result = judge([kiso('選択A')], 2024, {
+      assumeDesignatedCoursesPassed: true,
+    })
+    expect(req(result, 'required').satisfied).toBe(true)
+    expect(req(result, 'required').detail).toContain('指定科目オプション')
+    expect(req(result, 'elective-required').satisfied).toBe(true)
+    expect(req(result, 'elective-required').detail).toContain('指定科目オプション')
+    expect(req(result, 'senko-kiso').current).toBe(18)
+    expect(req(result, 'total').current).toBe(18)
+  })
+
+  it('オプション指定時もCSVにある指定科目は二重加算しない', () => {
+    const result = judge(
+      [
+        course('コンピュータサイエンス演習Ⅰ', senmon, '専攻基礎科目（選択必修1）'),
+        kiso('選択A'),
+      ],
+      2024,
+      { assumeDesignatedCoursesPassed: true },
+    )
+    expect(req(result, 'senko-kiso').current).toBe(18)
+  })
+
   it('入学年度が不明な場合はルールセットの警告を結果に含める', () => {
     const result = judge([kiso('選択A')], null)
     expect(result.warnings.some((w) => w.includes('推定できなかった'))).toBe(true)
