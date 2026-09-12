@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { CourseTable } from './components/CourseTable'
 import { FileDropZone } from './components/FileDropZone'
 import { RequirementTable } from './components/RequirementTable'
+import { ThemeSelector } from './components/ThemeSelector'
 import { decodeCsvBytes } from './lib/decode'
 import { judge } from './lib/judge'
 import { parseGradesFile } from './lib/parseCsv'
@@ -57,7 +58,10 @@ export default function App() {
   return (
     <main className="container">
       <header>
-        <h1>修了要件チェッカー</h1>
+        <div className="header-top">
+          <h1>修了要件チェッカー</h1>
+          <ThemeSelector />
+        </div>
         <p className="subtitle">
           大阪大学大学院情報科学研究科
           博士前期課程（コンピュータサイエンス専攻）

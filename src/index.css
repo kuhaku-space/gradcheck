@@ -1,5 +1,8 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #18181b;
+  --surface: #f4f4f5;
   --ok: #15803d;
   --ok-bg: #dcfce7;
   --ng: #b91c1c;
@@ -15,19 +18,21 @@
   line-height: 1.6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ok: #4ade80;
-    --ok-bg: #14532d;
-    --ng: #fca5a5;
-    --ng-bg: #7f1d1d;
-    --warn: #fde047;
-    --warn-bg: #713f12;
-    --info: #93c5fd;
-    --info-bg: #1e3a8a;
-    --border: #3f3f46;
-    --muted: #a1a1aa;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #18181b;
+  --foreground: #f4f4f5;
+  --surface: #27272a;
+  --ok: #4ade80;
+  --ok-bg: #14532d;
+  --ng: #fca5a5;
+  --ng-bg: #7f1d1d;
+  --warn: #fde047;
+  --warn-bg: #713f12;
+  --info: #93c5fd;
+  --info-bg: #1e3a8a;
+  --border: #3f3f46;
+  --muted: #a1a1aa;
 }
 
 * {
@@ -36,16 +41,57 @@
 
 body {
   margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+a {
+  color: var(--info);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.header-top h1 {
+  margin: 0;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--info);
+  color: var(--info);
+}
+
+:focus-visible {
+  outline: 2px solid var(--info);
+  outline-offset: 3px;
 }
 
 .container {
   max-width: 60rem;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
-}
-
-h1 {
-  margin-bottom: 0.25rem;
 }
 
 .subtitle {
@@ -62,6 +108,7 @@ h1 {
   text-align: center;
   cursor: pointer;
   color: inherit;
+  background: var(--surface);
   font: inherit;
   transition:
     border-color 0.15s,
@@ -161,6 +208,10 @@ table {
   border-collapse: collapse;
   width: 100%;
   font-size: 0.9rem;
+}
+
+th {
+  background: var(--surface);
 }
 
 th,
